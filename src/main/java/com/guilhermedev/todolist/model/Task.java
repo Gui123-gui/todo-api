@@ -53,4 +53,5 @@ public class Task {
     @JoinColumn(name = "category_id")
     private Category category;
 
+
 }
