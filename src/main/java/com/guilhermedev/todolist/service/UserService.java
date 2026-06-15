@@ -16,13 +16,22 @@ public class UserService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    public User getProfile(Long id){
+    /**
+     * Busca os dados do perfil do usuário logado.
+     * Usado pelo AuthController para exibir as informações da conta.
+     */
+    public User getProfile(Long id) {
         log.info("Getting profile for user with id: {}", id);
         return userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("No user found with id: " + id));
     }
 
-    public User updateUser(long id, User user){
+    /**
+     * Atualiza nome e email do usuário.
+     * A senha não é alterada aqui - existe um método específico (changePassword)
+     * para isso, já que envolve criptografia.
+     */
+    public User updateUser(long id, User user) {
         log.info("Updating user with id: {}", id);
         User u = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("No user found with id: " + id));
@@ -31,7 +40,12 @@ public class UserService {
         return userRepository.save(u);
     }
 
-    public void changePassword(Long id, String newPassword){
+    /**
+     * Troca a senha do usuário.
+     * A nova senha é criptografada com BCrypt antes de salvar -
+     * nunca armazenar senha em texto puro no banco.
+     */
+    public void changePassword(Long id, String newPassword) {
         log.info("Changing password for user with id: {}", id);
         User u = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("No user found with id: " + id));
@@ -39,14 +53,25 @@ public class UserService {
         userRepository.save(u);
     }
 
-    public void deleteUser(Long id){
+    /**
+     * Remove a conta do usuário.
+     * Como Task e Category têm @ManyToOne para User, a configuração de
+     * cascade no banco (ou a ausência dela) determina o que acontece
+     * com as tasks/categorias desse usuário ao deletar.
+     */
+    public void deleteUser(Long id) {
         log.info("Deleting user with id: {}", id);
         User u = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("No user found with id: " + id));
         userRepository.delete(u);
     }
 
-    public User findById(Long userId){
+    /**
+     * Busca um usuário pelo id - método de apoio usado por outros services
+     * (ex: TaskService) para resolver o relacionamento User em uma Task,
+     * já que o Dozer não converte userId (Long) em User automaticamente.
+     */
+    public User findById(Long userId) {
         log.info("Finding user with id: {}", userId);
         return userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("No user found with id: " + userId));
