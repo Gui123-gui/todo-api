@@ -18,7 +18,7 @@ public class ObjectMapper {
         List<D> objectDestination = new ArrayList<>();
 
         for (Object o: origin){
-            objectDestination.add(mapper.map(origin,destination));
+            objectDestination.add(mapper.map(o,destination));
         }
         return objectDestination;
     }
