@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS categories (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    color VARCHAR(255) NOT NULL,
+    user_id BIGINT NOT NULL,
+    CONSTRAINT fk_categories_user FOREIGN KEY (user_id) REFERENCES users(id)
+);

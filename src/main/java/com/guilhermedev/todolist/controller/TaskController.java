@@ -1,11 +1,9 @@
 package com.guilhermedev.todolist.controller;
 
-import com.guilhermedev.todolist.model.Task;
-import com.guilhermedev.todolist.repository.TaskRepository;
 import com.guilhermedev.todolist.service.TaskService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/tasks")
@@ -14,29 +12,10 @@ public class TaskController {
     @Autowired
     private TaskService taskService;
 
-    @GetMapping
-    public ResponseEntity<?> getAllTasks() {
-        return ResponseEntity.ok(taskService.findAll());
-    }
-
-    @GetMapping("/id")
-    public ResponseEntity<?> getTaskById(@RequestParam Long id) {
-        return ResponseEntity.ok(taskService.findById(id));
-    }
-
-    @PostMapping
-    public ResponseEntity<?> createTask(@RequestBody Task task) {
-        return ResponseEntity.ok(taskService.createTask(task));
-    }
-
-    @PutMapping
-    public ResponseEntity<?> updateTask(@RequestBody Task task) {
-        return ResponseEntity.ok(taskService.updateTask(task));
-    }
-
-    @DeleteMapping
-    public ResponseEntity<?> deleteTask(@RequestParam Long id) {
-        taskService.deleteTask(id);
-        return ResponseEntity.noContent().build();
-    }
+    // TODO: reescrever endpoints após implementar JWT + Spring Security
+    // - getAllTasks() -> taskService.getAllTasks(userId)
+    // - getTaskById(@PathVariable Long id) -> taskService.getTaskById(id, userId)
+    // - createTask(@RequestBody TaskRequestDTO) -> taskService.createTask(dto, userId)
+    // - updateTask(@PathVariable Long id, @RequestBody TaskRequestDTO) -> taskService.updateTask(id, dto, userId)
+    // - deleteTask(@PathVariable Long id) -> taskService.deleteTask(id, userId)
 }
