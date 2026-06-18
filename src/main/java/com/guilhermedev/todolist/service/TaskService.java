@@ -5,11 +5,13 @@ import com.guilhermedev.todolist.dto.task.TaskResponseDTO;
 import static com.guilhermedev.todolist.mapper.ObjectMapper.parseListObjects;
 import static com.guilhermedev.todolist.mapper.ObjectMapper.parseObject;
 
+import com.guilhermedev.todolist.enums.Status;
 import com.guilhermedev.todolist.model.Category;
 import com.guilhermedev.todolist.model.Task;
 import com.guilhermedev.todolist.model.User;
 import com.guilhermedev.todolist.repository.CategoryRepository;
 import com.guilhermedev.todolist.repository.TaskRepository;
+import jakarta.persistence.Id;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -112,4 +114,12 @@ public class TaskService {
         taskRepository.delete(existingTask);
     }
 
+    public TaskResponseDTO markAsCompleted(Long id, Long userId) {
+        log.info("Marking task as completed: {}", id);
+        Task existingTask = taskRepository.findByIdAndUserId(id, userId)
+                .orElseThrow(() -> new RuntimeException("No task found with id: " + id));
+
+        existingTask.setStatus(Status.CONCLUIDA);
+        return parseObject(taskRepository.save(existingTask), TaskResponseDTO.class);
+    }
 }
