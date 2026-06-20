@@ -1,5 +1,6 @@
 package com.guilhermedev.todolist.service;
 
+import com.guilhermedev.todolist.config.SecurityConfig;
 import com.guilhermedev.todolist.dto.login.LoginRequestDTO;
 import com.guilhermedev.todolist.dto.login.LoginResponseDTO;
 import com.guilhermedev.todolist.dto.user.UserRequestDTO;
@@ -11,18 +12,20 @@ import static com.guilhermedev.todolist.mapper.ObjectMapper.parseObject;
 import com.guilhermedev.todolist.security.JwtUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
-public class AuthService {
+public class AuthService{
 
     @Autowired
-    private PasswordEncoder passwordEncoder;
+    AuthenticationManager authenticationManager;
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private SecurityConfig securityConfig;
     @Autowired
     private JwtUtil jwtUtil;
 
@@ -31,7 +34,7 @@ public class AuthService {
      */
     public UserResponseDTO createUser(UserRequestDTO  userRequestDTO) {
         var entity = parseObject(userRequestDTO, User.class);
-        entity.setPassword(passwordEncoder.encode(userRequestDTO.getPassword()));
+        entity.setPassword(securityConfig.passwordEncoder().encode(userRequestDTO.getPassword()));
         return parseObject(userRepository.save(entity), UserResponseDTO.class);
     }
 
@@ -41,17 +44,14 @@ public class AuthService {
      */
 
     public LoginResponseDTO login(LoginRequestDTO loginRequestDTO) {
-        var entity = parseObject(loginRequestDTO, User.class);
-        User u = userRepository.findByEmail(entity.getEmail())
-                .orElseThrow(() -> new BadCredentialsException("Invalid email"));
-        if (!passwordEncoder.matches(
-                loginRequestDTO.getPassword(),
-                u.getPassword())) {
+        var userNamePassword = new UsernamePasswordAuthenticationToken(
+                loginRequestDTO.getEmail(), loginRequestDTO.getPassword());
 
-            throw new BadCredentialsException("Credenciais inválidas");
-        }
-        LoginResponseDTO loginResponseDTO = new LoginResponseDTO();
-        loginResponseDTO.setToken(jwtUtil.generateToken(u.getId(), u.getEmail()));
-        return loginResponseDTO;
+        var auth = authenticationManager.authenticate(userNamePassword);
+        User authenticatedUser = (User) auth.getPrincipal();
+
+        LoginResponseDTO response = new LoginResponseDTO();
+        response.setToken(jwtUtil.generateToken(authenticatedUser.getId(), authenticatedUser.getEmail()));
+        return response;
     }
 }
