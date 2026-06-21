@@ -10,7 +10,10 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class LoginRequestDTO {
+public class RegisterRequestDTO {
+
+    @NotEmpty(message = "name is required")
+    private String name;
 
     @NotEmpty(message = "email is required")
     private String email;

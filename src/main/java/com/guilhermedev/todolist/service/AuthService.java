@@ -14,28 +14,37 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
 public class AuthService{
 
-    @Autowired
-    AuthenticationManager authenticationManager;
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private SecurityConfig securityConfig;
-    @Autowired
-    private JwtUtil jwtUtil;
+    private final AuthenticationManager authenticationManager;
+    private final UserRepository userRepository;
+    private final JwtUtil jwtUtil;
+    private final PasswordEncoder passwordEncoder;
+
+    public AuthService(AuthenticationManager authenticationManager, UserRepository userRepository, JwtUtil jwtUtil, PasswordEncoder passwordEncoder) {
+        this.authenticationManager = authenticationManager;
+        this.userRepository = userRepository;
+        this.jwtUtil = jwtUtil;
+        this.passwordEncoder = passwordEncoder;
+    }
+
 
     /**
      * Cria o perfil do usuário
      */
-    public UserResponseDTO createUser(UserRequestDTO  userRequestDTO) {
-        var entity = parseObject(userRequestDTO, User.class);
-        entity.setPassword(securityConfig.passwordEncoder().encode(userRequestDTO.getPassword()));
-        return parseObject(userRepository.save(entity), UserResponseDTO.class);
+    public UserResponseDTO register(UserRequestDTO  requestDTO) {
+        var entity = parseObject(requestDTO, User.class);
+        entity.setPassword(passwordEncoder.encode(requestDTO.getPassword()));
+
+        userRepository.save(entity);
+
+        return parseObject(entity, UserResponseDTO.class);
     }
 
     /**
@@ -44,14 +53,16 @@ public class AuthService{
      */
 
     public LoginResponseDTO login(LoginRequestDTO loginRequestDTO) {
-        var userNamePassword = new UsernamePasswordAuthenticationToken(
+        UsernamePasswordAuthenticationToken userNamePassword = new UsernamePasswordAuthenticationToken(
                 loginRequestDTO.getEmail(), loginRequestDTO.getPassword());
 
-        var auth = authenticationManager.authenticate(userNamePassword);
-        User authenticatedUser = (User) auth.getPrincipal();
+        Authentication authentication = authenticationManager.authenticate(userNamePassword);
+
+        User user = (User) authentication.getPrincipal();
+        String token = jwtUtil.generateToken(user.getId(), user.getEmail());
 
         LoginResponseDTO response = new LoginResponseDTO();
-        response.setToken(jwtUtil.generateToken(authenticatedUser.getId(), authenticatedUser.getEmail()));
+        response.setToken(token);
         return response;
     }
 }
