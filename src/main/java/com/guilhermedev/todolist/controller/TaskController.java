@@ -1,11 +1,13 @@
 package com.guilhermedev.todolist.controller;
 
 import com.guilhermedev.todolist.dto.task.TaskRequestDTO;
-import com.guilhermedev.todolist.model.Task;
+import com.guilhermedev.todolist.dto.task.TaskResponseDTO;
 import com.guilhermedev.todolist.service.TaskService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import com.guilhermedev.todolist.model.User;
 
 import java.util.List;
 
@@ -16,32 +18,36 @@ public class TaskController {
     @Autowired
     private TaskService taskService;
 
-    // TODO: reescrever endpoints após implementar JWT + Spring Security
-    // - getAllTasks() -> taskService.getAllTasks(userId)
     @GetMapping
-    public ResponseEntity<List<Task>> getAllTasks() {
+    public ResponseEntity<List<TaskResponseDTO>> getAllTasks(@AuthenticationPrincipal User user,
+                                                             @RequestParam(defaultValue = "0") int page,
+                                                             @RequestParam(defaultValue = "10") int size) {
 
-        return ResponseEntity.ok(taskService.getAllTasks());
+        return ResponseEntity.ok(taskService.getAllTasks(user.getId(), page, size));
     }
-    // - getTaskById(@PathVariable Long id) -> taskService.getTaskById(id, userId)
+
     @GetMapping("/{id}")
-    public ResponseEntity<Task> getTaskById(@PathVariable Long id) {
-        return ResponseEntity.ok(taskService.getTaskById(id, userId));
+    public ResponseEntity<TaskResponseDTO> getTaskById(@PathVariable Long id,
+                                                       @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(taskService.getTaskById(id, user.getId()));
     }
-    // - createTask(@RequestBody TaskRequestDTO) -> taskService.createTask(dto, userId)
+
     @PostMapping
-    public ResponseEntity<Task> createTask(@RequestBody TaskRequestDTO dto) {
-        return ResponseEntity.ok(taskService.createTask(dto, userId));
+    public ResponseEntity<TaskResponseDTO> createTask(@RequestBody TaskRequestDTO dto,
+                                                      @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(taskService.createTask(dto, user.getId()));
     }
-    // - updateTask(@PathVariable Long id, @RequestBody TaskRequestDTO) -> taskService.updateTask(id, dto, userId)
+
     @PutMapping("/{id}")
-    public ResponseEntity<Task> updateTask(@PathVariable Long id, @RequestBody TaskRequestDTO dto) {
-        return ResponseEntity.ok(taskService.updateTask(id, dto, userId));
+    public ResponseEntity<TaskResponseDTO> updateTask(@PathVariable Long id,
+                                                      @RequestBody TaskRequestDTO dto,
+                                                      @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(taskService.updateTask(id, dto, user.getId()));
     }
-    // - deleteTask(@PathVariable Long id) -> taskService.deleteTask(id, userId)
+
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteTask(@PathVariable Long id) {
-        taskService.deleteTask(id, userId);
+    public ResponseEntity<Void> deleteTask(@PathVariable Long id, @AuthenticationPrincipal User user) {
+        taskService.deleteTask(id, user.getId());
         return ResponseEntity.noContent().build();
     }
 }

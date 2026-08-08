@@ -14,6 +14,8 @@ import com.guilhermedev.todolist.repository.TaskRepository;
 import jakarta.persistence.Id;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -53,18 +55,12 @@ public class TaskService {
         return parseObject(taskRepository.save(entity), TaskResponseDTO.class);
     }
 
-    /**
-     * Lista todas as tasks pertencentes ao usuário logado.
-     */
-    public List<TaskResponseDTO> getAllTasks(Long userId) {
+    public List<TaskResponseDTO> getAllTasks(Long userId, int page, int size) {
         log.info("Fetching all tasks for user with id: {}", userId);
-        return parseListObjects(taskRepository.findByUserId(userId), TaskResponseDTO.class);
+        Pageable pageable = PageRequest.of(page, size);
+        return parseListObjects(taskRepository.findByUserId(userId, pageable), TaskResponseDTO.class);
     }
 
-    /**
-     * Busca uma task específica, garantindo que ela pertence ao usuário logado.
-     * findByIdAndUserId evita que um usuário acesse tasks de outro.
-     */
     public TaskResponseDTO getTaskById(Long id, Long userId) {
         log.info("Fetching task with id: {} for user with id: {}", id, userId);
         Task idAndUser = taskRepository.findByIdAndUserId(id, userId)
@@ -72,13 +68,6 @@ public class TaskService {
         return parseObject(idAndUser, TaskResponseDTO.class);
     }
 
-    /**
-     * Atualiza uma task existente do usuário logado (PUT - atualização completa).
-     * - Busca a task garantindo que pertence ao usuário (segurança)
-     * - Atualiza todos os campos simples
-     * - Trata a categoria: associa se categoryId vier preenchido,
-     *   ou remove a categoria atual se vier nulo
-     */
     public TaskResponseDTO updateTask(Long id, TaskRequestDTO task, Long userId) {
         log.info("Updating task with id: {}", id);
         Task existingTask = taskRepository.findByIdAndUserId(id, userId)
@@ -103,10 +92,6 @@ public class TaskService {
         return parseObject(taskRepository.save(existingTask), TaskResponseDTO.class);
     }
 
-    /**
-     * Remove uma task do usuário logado.
-     * findByIdAndUserId garante que ele só pode deletar as próprias tasks.
-     */
     public void deleteTask(Long id, Long userId) {
         log.info("Deleting task with id: {}", id);
         Task existingTask = taskRepository.findByIdAndUserId(id, userId)

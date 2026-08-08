@@ -1,6 +1,5 @@
 package com.guilhermedev.todolist.service;
 
-import com.guilhermedev.todolist.config.SecurityConfig;
 import com.guilhermedev.todolist.dto.login.LoginRequestDTO;
 import com.guilhermedev.todolist.dto.login.LoginResponseDTO;
 import com.guilhermedev.todolist.dto.user.UserRequestDTO;
@@ -11,7 +10,6 @@ import static com.guilhermedev.todolist.mapper.ObjectMapper.parseObject;
 
 import com.guilhermedev.todolist.security.JwtUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -35,9 +33,6 @@ public class AuthService{
     }
 
 
-    /**
-     * Cria o perfil do usuário
-     */
     public UserResponseDTO register(UserRequestDTO  requestDTO) {
         var entity = parseObject(requestDTO, User.class);
         entity.setPassword(passwordEncoder.encode(requestDTO.getPassword()));
@@ -46,11 +41,6 @@ public class AuthService{
 
         return parseObject(entity, UserResponseDTO.class);
     }
-
-    /**
-     * Verifica o email e senha
-     * Gera o token de acesso
-     */
 
     public LoginResponseDTO login(LoginRequestDTO loginRequestDTO) {
         UsernamePasswordAuthenticationToken userNamePassword = new UsernamePasswordAuthenticationToken(
