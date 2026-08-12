@@ -1,33 +1,34 @@
 package com.guilhermedev.todolist.controller;
 
 import com.guilhermedev.todolist.dto.login.*;
+import com.guilhermedev.todolist.enums.UserRole;
 import com.guilhermedev.todolist.model.User;
 import com.guilhermedev.todolist.repository.UserRepository;
 import com.guilhermedev.todolist.service.AuthService;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDateTime;
+
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
 
-    @Autowired
-    private AuthService  authService;
-
+    private final AuthService authService;
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public AuthController(UserRepository userRepository) {
+    public AuthController(AuthService authService, UserRepository userRepository, PasswordEncoder passwordEncoder) {
+        this.authService = authService;
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
-
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponseDTO> login(@RequestBody @Valid LoginRequestDTO loginRequestDTO) {
@@ -38,7 +39,9 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<RegisterResponseDTO> register(@RequestBody @Valid RegisterRequestDTO request) {
         User newUser = new User();
-        newUser.setPassword(request.getPassword());
+        newUser.setRole(UserRole.USER);
+        newUser.setCreatedAt(LocalDateTime.now());
+        newUser.setPassword(passwordEncoder.encode(request.getPassword()));
         newUser.setEmail(request.getEmail());
         newUser.setName(request.getName());
 
