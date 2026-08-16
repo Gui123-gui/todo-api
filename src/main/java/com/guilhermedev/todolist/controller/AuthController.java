@@ -2,6 +2,7 @@ package com.guilhermedev.todolist.controller;
 
 import com.guilhermedev.todolist.dto.login.*;
 import com.guilhermedev.todolist.enums.UserRole;
+import com.guilhermedev.todolist.exception.user.UserAlreadyExistsException;
 import com.guilhermedev.todolist.model.User;
 import com.guilhermedev.todolist.repository.UserRepository;
 import com.guilhermedev.todolist.service.AuthService;
@@ -38,6 +39,10 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<RegisterResponseDTO> register(@RequestBody @Valid RegisterRequestDTO request) {
+        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+            throw new UserAlreadyExistsException(request.getEmail());
+        }
+
         User newUser = new User();
         newUser.setRole(UserRole.USER);
         newUser.setCreatedAt(LocalDateTime.now());

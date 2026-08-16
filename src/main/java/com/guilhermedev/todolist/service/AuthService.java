@@ -4,6 +4,7 @@ import com.guilhermedev.todolist.dto.login.LoginRequestDTO;
 import com.guilhermedev.todolist.dto.login.LoginResponseDTO;
 import com.guilhermedev.todolist.dto.user.UserRequestDTO;
 import com.guilhermedev.todolist.dto.user.UserResponseDTO;
+import com.guilhermedev.todolist.exception.auth.InvalidCredentialsException;
 import com.guilhermedev.todolist.model.User;
 import com.guilhermedev.todolist.repository.UserRepository;
 import static com.guilhermedev.todolist.mapper.ObjectMapper.parseObject;
@@ -13,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -46,7 +48,12 @@ public class AuthService{
         UsernamePasswordAuthenticationToken userNamePassword = new UsernamePasswordAuthenticationToken(
                 loginRequestDTO.getEmail(), loginRequestDTO.getPassword());
 
-        Authentication authentication = authenticationManager.authenticate(userNamePassword);
+        Authentication authentication;
+        try {
+            authentication = authenticationManager.authenticate(userNamePassword);
+        } catch (AuthenticationException e) {
+            throw new InvalidCredentialsException();
+        }
 
         User user = (User) authentication.getPrincipal();
         String token = jwtUtil.generateToken(user.getId(), user.getEmail());

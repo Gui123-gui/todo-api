@@ -11,6 +11,7 @@ import com.guilhermedev.todolist.exception.user.InvalidPasswordException;
 import com.guilhermedev.todolist.exception.user.UserAlreadyExistsException;
 import com.guilhermedev.todolist.exception.user.UserNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.time.LocalDateTime;
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -92,8 +94,8 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(value = {Exception.class})
-    public ResponseEntity<ErrorResponse> handleInternalServerError
-            (Exception ex, HttpServletRequest request) {
+    public ResponseEntity<ErrorResponse> handleInternalServerError(Exception ex, HttpServletRequest request) {
+        log.error("Unexpected error on {}: ", request.getRequestURI(), ex);
 
         ErrorResponse response = new ErrorResponse(
                 "INTERNAL_SERVER_ERROR",
@@ -101,7 +103,6 @@ public class GlobalExceptionHandler {
                 LocalDateTime.now(),
                 request.getRequestURI()
         );
-
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
 }

@@ -2,7 +2,6 @@ package com.guilhermedev.todolist.service;
 
 import com.guilhermedev.todolist.dto.category.CategoryRequestDTO;
 import com.guilhermedev.todolist.dto.category.CategoryResponseDTO;
-import static com.guilhermedev.todolist.mapper.ObjectMapper.parseListObjects;
 import static com.guilhermedev.todolist.mapper.ObjectMapper.parseObject;
 
 import com.guilhermedev.todolist.exception.category.CategoryNotFoundException;
@@ -28,7 +27,9 @@ public class CategoryService {
 
     public List<CategoryResponseDTO> getAllCategories(Long userId) {
         log.info("Fetching all categories for user with id: {}", userId);
-        return parseListObjects(categoryRepository.findByUserId(userId), CategoryResponseDTO.class);
+        return categoryRepository.findByUserId(userId).stream()
+                .map(this::toResponseDTO)
+                .toList();
     }
 
     public CategoryResponseDTO createCategory(CategoryRequestDTO category, Long userId) {
@@ -38,7 +39,7 @@ public class CategoryService {
         User user = userService.findById(userId);
         entity.setUser(user);
 
-        return parseObject(categoryRepository.save(entity), CategoryResponseDTO.class);
+        return toResponseDTO(categoryRepository.save(entity));
     }
 
     public CategoryResponseDTO updateCategory(Long id, CategoryRequestDTO category, Long userId) {
@@ -47,7 +48,7 @@ public class CategoryService {
                 .orElseThrow(() -> new CategoryNotFoundException(id));
         c.setName(category.getName());
         c.setColor(category.getColor());
-        return parseObject(categoryRepository.save(c), CategoryResponseDTO.class);
+        return toResponseDTO(categoryRepository.save(c));
     }
 
     public void deleteCategory(Long id, Long userId) {
@@ -55,5 +56,11 @@ public class CategoryService {
         Category c = categoryRepository.findByIdAndUserId(id, userId)
                 .orElseThrow(() -> new CategoryNotFoundException(id));
         categoryRepository.delete(c);
+    }
+
+    private CategoryResponseDTO toResponseDTO(Category category) {
+        CategoryResponseDTO dto = parseObject(category, CategoryResponseDTO.class);
+        dto.setUserId(category.getUser().getId());
+        return dto;
     }
 }
