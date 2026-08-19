@@ -2,9 +2,6 @@ package com.guilhermedev.todolist.exception.category;
 
 import com.guilhermedev.todolist.exception.GlobalException;
 
-/**
- * Exception lançada quando o usuário tenta acessar uma categoria que não pertence a ele.
- */
 public class CategoryUnauthorizedException extends GlobalException {
 
     public CategoryUnauthorizedException(Long categoryId, Long userId) {

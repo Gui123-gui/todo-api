@@ -1,5 +1,6 @@
 package com.guilhermedev.todolist.security;
 
+import com.guilhermedev.todolist.exception.auth.InvalidTokenException;
 import com.guilhermedev.todolist.service.CustomUserDetailsService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -44,6 +45,9 @@ public class SecurityFilter extends OncePerRequestFilter {
                         new UsernamePasswordAuthenticationToken(
                                 userDetails, null, userDetails.getAuthorities());
                 SecurityContextHolder.getContext().setAuthentication(authentication);
+            }
+            else {
+                throw new InvalidTokenException();
             }
         }
         filterChain.doFilter(request, response);

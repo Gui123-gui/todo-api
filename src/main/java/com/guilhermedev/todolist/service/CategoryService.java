@@ -5,6 +5,7 @@ import com.guilhermedev.todolist.dto.category.CategoryResponseDTO;
 import static com.guilhermedev.todolist.mapper.ObjectMapper.parseObject;
 
 import com.guilhermedev.todolist.exception.category.CategoryNotFoundException;
+import com.guilhermedev.todolist.exception.category.CategoryUnauthorizedException;
 import com.guilhermedev.todolist.model.Category;
 import com.guilhermedev.todolist.model.User;
 import com.guilhermedev.todolist.repository.CategoryRepository;
@@ -44,8 +45,9 @@ public class CategoryService {
 
     public CategoryResponseDTO updateCategory(Long id, CategoryRequestDTO category, Long userId) {
         log.info("Updating category with id: {}", id);
-        Category c = categoryRepository.findByIdAndUserId(id, userId)
-                .orElseThrow(() -> new CategoryNotFoundException(id));
+        Category c = findCategory(id);
+        checkOwnership(c, userId);
+
         c.setName(category.getName());
         c.setColor(category.getColor());
         return toResponseDTO(categoryRepository.save(c));
@@ -53,9 +55,21 @@ public class CategoryService {
 
     public void deleteCategory(Long id, Long userId) {
         log.info("Deleting category with id: {}", id);
-        Category c = categoryRepository.findByIdAndUserId(id, userId)
-                .orElseThrow(() -> new CategoryNotFoundException(id));
+        Category c = findCategory(id);
+        checkOwnership(c, userId);
+
         categoryRepository.delete(c);
+    }
+
+    private Category findCategory(Long id) {
+        return categoryRepository.findById(id)
+                .orElseThrow(() -> new CategoryNotFoundException(id));
+    }
+
+    private void checkOwnership(Category category, Long userId) {
+        if (!category.getUser().getId().equals(userId)) {
+            throw new CategoryUnauthorizedException(category.getId(), userId);
+        }
     }
 
     private CategoryResponseDTO toResponseDTO(Category category) {
