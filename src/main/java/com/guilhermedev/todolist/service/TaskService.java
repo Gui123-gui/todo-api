@@ -8,6 +8,7 @@ import static com.guilhermedev.todolist.mapper.ObjectMapper.parseObject;
 import com.guilhermedev.todolist.enums.Status;
 import com.guilhermedev.todolist.exception.category.CategoryNotFoundException;
 import com.guilhermedev.todolist.exception.task.TaskNotFoundException;
+import com.guilhermedev.todolist.exception.task.TaskUnauthorizedException;
 import com.guilhermedev.todolist.model.Category;
 import com.guilhermedev.todolist.model.Task;
 import com.guilhermedev.todolist.model.User;
@@ -42,7 +43,7 @@ public class TaskService {
         entity.setUser(user);
 
         if (task.getCategoryId() != null) {
-            Category category = categoryRepository.findById(task.getCategoryId())
+            Category category = categoryRepository.findByIdAndUserId(task.getCategoryId(), userId)
                     .orElseThrow(() -> new CategoryNotFoundException(task.getCategoryId()));
             entity.setCategory(category);
         }
@@ -58,15 +59,16 @@ public class TaskService {
 
     public TaskResponseDTO getTaskById(Long id, Long userId) {
         log.info("Fetching task with id: {} for user with id: {}", id, userId);
-        Task idAndUser = taskRepository.findByIdAndUserId(id, userId)
-                .orElseThrow(() -> new TaskNotFoundException(id, userId));
-        return parseObject(idAndUser, TaskResponseDTO.class);
+        Task task = findTask(id);
+        checkOwnership(task, userId);
+
+        return parseObject(task, TaskResponseDTO.class);
     }
 
     public TaskResponseDTO updateTask(Long id, TaskRequestDTO task, Long userId) {
         log.info("Updating task with id: {}", id);
-        Task existingTask = taskRepository.findByIdAndUserId(id, userId)
-                .orElseThrow(() -> new TaskNotFoundException(id));
+        Task existingTask = findTask(id);
+        checkOwnership(existingTask, userId);
 
         existingTask.setTitle(task.getTitle());
         existingTask.setDescription(task.getDescription());
@@ -75,7 +77,7 @@ public class TaskService {
         existingTask.setDueDate(task.getDueDate());
 
         if (task.getCategoryId() != null) {
-            Category category = categoryRepository.findById(task.getCategoryId())
+            Category category = categoryRepository.findByIdAndUserId(task.getCategoryId(), userId)
                     .orElseThrow(() -> new CategoryNotFoundException(task.getCategoryId()));
             existingTask.setCategory(category);
         } else {
@@ -87,17 +89,28 @@ public class TaskService {
 
     public void deleteTask(Long id, Long userId) {
         log.info("Deleting task with id: {}", id);
-        Task existingTask = taskRepository.findByIdAndUserId(id, userId)
-                .orElseThrow(() -> new TaskNotFoundException(id));
+        Task existingTask = findTask(id);
+        checkOwnership(existingTask, userId);
         taskRepository.delete(existingTask);
     }
 
     public TaskResponseDTO markAsCompleted(Long id, Long userId) {
         log.info("Marking task as completed: {}", id);
-        Task existingTask = taskRepository.findByIdAndUserId(id, userId)
-                .orElseThrow(() -> new TaskNotFoundException(id));
+        Task existingTask = findTask(id);
+        checkOwnership(existingTask, userId);
 
         existingTask.setStatus(Status.CONCLUIDA);
         return parseObject(taskRepository.save(existingTask), TaskResponseDTO.class);
+    }
+
+    private Task findTask(Long id){
+        return taskRepository.findById(id)
+                .orElseThrow(() -> new TaskNotFoundException(id));
+    }
+
+    private void checkOwnership(Task task, Long userId) {
+        if (!task.getUser().getId().equals(userId)) {
+            throw new TaskUnauthorizedException(task.getId(), userId);
+        }
     }
 }

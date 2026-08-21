@@ -2,9 +2,6 @@ package com.guilhermedev.todolist.exception.task;
 
 import com.guilhermedev.todolist.exception.GlobalException;
 
-/**
- * Exception lançada quando o usuário tenta acessar uma tarefa que não pertence a ele.
- */
 public class TaskUnauthorizedException extends GlobalException {
 
     public TaskUnauthorizedException(Long taskId, Long userId) {
