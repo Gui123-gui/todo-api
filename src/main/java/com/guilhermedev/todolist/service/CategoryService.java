@@ -11,11 +11,13 @@ import com.guilhermedev.todolist.model.User;
 import com.guilhermedev.todolist.repository.CategoryRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Slf4j
 @Service
+@Transactional(readOnly = true)
 public class CategoryService {
 
     private final CategoryRepository categoryRepository;
@@ -33,6 +35,7 @@ public class CategoryService {
                 .toList();
     }
 
+    @Transactional
     public CategoryResponseDTO createCategory(CategoryRequestDTO category, Long userId) {
         log.info("Creating a new category with name: {}", category.getName());
         var entity = parseObject(category, Category.class);
@@ -43,22 +46,29 @@ public class CategoryService {
         return toResponseDTO(categoryRepository.save(entity));
     }
 
+    @Transactional
     public CategoryResponseDTO updateCategory(Long id, CategoryRequestDTO category, Long userId) {
         log.info("Updating category with id: {}", id);
-        Category c = findCategory(id);
-        checkOwnership(c, userId);
+        Category c = findCategoryByIdAndUserId(id, userId);
 
         c.setName(category.getName());
         c.setColor(category.getColor());
         return toResponseDTO(categoryRepository.save(c));
     }
 
+    @Transactional
     public void deleteCategory(Long id, Long userId) {
         log.info("Deleting category with id: {}", id);
-        Category c = findCategory(id);
-        checkOwnership(c, userId);
+        Category c = findCategoryByIdAndUserId(id, userId);
 
         categoryRepository.delete(c);
+    }
+
+    public Category findCategoryByIdAndUserId(Long categoryId, Long userId) {
+        log.info("Fetching category with id: {} for user with id: {}", categoryId, userId);
+        Category category = findCategory(categoryId);
+        checkOwnership(category, userId);
+        return category;
     }
 
     private Category findCategory(Long id) {
@@ -70,13 +80,6 @@ public class CategoryService {
         if (!category.getUser().getId().equals(userId)) {
             throw new CategoryUnauthorizedException(category.getId(), userId);
         }
-    }
-
-    public Category findCategoryByIdAndUserId(Long categoryId, Long userId) {
-        log.info("Fetching category with id: {} for user with id: {}", categoryId, userId);
-        Category category = findCategory(categoryId);
-        checkOwnership(category, userId);
-        return category;
     }
 
     private CategoryResponseDTO toResponseDTO(Category category) {

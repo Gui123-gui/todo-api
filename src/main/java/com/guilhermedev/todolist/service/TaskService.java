@@ -69,16 +69,14 @@ public class TaskService {
 
     public TaskResponseDTO getTaskById(Long id, Long userId) {
         log.info("Fetching task with id: {} for user with id: {}", id, userId);
-        Task task = findTask(id);
-        checkOwnership(task, userId);
+        Task task = findTaskByIdAndUserId(id, userId);
         return toResponseDTO(task);
     }
 
     @Transactional
     public TaskResponseDTO updateTask(Long id, TaskRequestDTO requestDTO, Long userId) {
         log.info("Updating task with id: {} for user: {}", id, userId);
-        Task existingTask = findTask(id);
-        checkOwnership(existingTask, userId);
+        Task existingTask = findTaskByIdAndUserId(id, userId);
 
         applyUpdates(existingTask, requestDTO, userId);
 
@@ -88,19 +86,23 @@ public class TaskService {
     @Transactional
     public void deleteTask(Long id, Long userId) {
         log.info("Deleting task with id: {} for user: {}", id, userId);
-        Task existingTask = findTask(id);
-        checkOwnership(existingTask, userId);
+        Task existingTask = findTaskByIdAndUserId(id, userId);
         taskRepository.delete(existingTask);
     }
 
     @Transactional
     public TaskResponseDTO markAsCompleted(Long id, Long userId) {
         log.info("Marking task with id: {} as completed for user: {}", id, userId);
-        Task existingTask = findTask(id);
-        checkOwnership(existingTask, userId);
+        Task existingTask = findTaskByIdAndUserId(id, userId);
 
         existingTask.setStatus(Status.CONCLUIDA);
         return toResponseDTO(taskRepository.save(existingTask));
+    }
+
+    public Task findTaskByIdAndUserId(Long id, Long userId) {
+        Task task = findTask(id);
+        checkOwnership(task, userId);
+        return task;
     }
 
     private Task findTask(Long id) {
@@ -120,8 +122,6 @@ public class TaskService {
         }
         return categoryService.findCategoryByIdAndUserId(categoryId, userId);
     }
-
-
 
     private void applyUpdates(Task task, TaskRequestDTO requestDTO, Long userId) {
         task.setTitle(requestDTO.getTitle());
