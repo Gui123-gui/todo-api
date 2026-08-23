@@ -72,6 +72,13 @@ public class CategoryService {
         }
     }
 
+    public Category findCategoryByIdAndUserId(Long categoryId, Long userId) {
+        log.info("Fetching category with id: {} for user with id: {}", categoryId, userId);
+        Category category = findCategory(categoryId);
+        checkOwnership(category, userId);
+        return category;
+    }
+
     private CategoryResponseDTO toResponseDTO(Category category) {
         CategoryResponseDTO dto = parseObject(category, CategoryResponseDTO.class);
         dto.setUserId(category.getUser().getId());
