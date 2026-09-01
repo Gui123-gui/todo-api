@@ -2,13 +2,13 @@ package com.guilhermedev.todolist.service;
 
 import com.guilhermedev.todolist.dto.login.LoginRequestDTO;
 import com.guilhermedev.todolist.dto.login.LoginResponseDTO;
-import com.guilhermedev.todolist.dto.user.UserRequestDTO;
-import com.guilhermedev.todolist.dto.user.UserResponseDTO;
+import com.guilhermedev.todolist.dto.login.RegisterRequestDTO;
+import com.guilhermedev.todolist.dto.login.RegisterResponseDTO;
+import com.guilhermedev.todolist.enums.UserRole;
 import com.guilhermedev.todolist.exception.auth.InvalidCredentialsException;
+import com.guilhermedev.todolist.exception.user.UserAlreadyExistsException;
 import com.guilhermedev.todolist.model.User;
 import com.guilhermedev.todolist.repository.UserRepository;
-import static com.guilhermedev.todolist.mapper.ObjectMapper.parseObject;
-
 import com.guilhermedev.todolist.security.JwtUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -18,9 +18,11 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+
 @Slf4j
 @Service
-public class AuthService{
+public class AuthService {
 
     private final AuthenticationManager authenticationManager;
     private final UserRepository userRepository;
@@ -34,14 +36,23 @@ public class AuthService{
         this.passwordEncoder = passwordEncoder;
     }
 
+    public RegisterResponseDTO register(RegisterRequestDTO request) {
+        log.info("Registering new user with email: {}", request.getEmail());
 
-    public UserResponseDTO register(UserRequestDTO  requestDTO) {
-        var entity = parseObject(requestDTO, User.class);
-        entity.setPassword(passwordEncoder.encode(requestDTO.getPassword()));
+        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+            throw new UserAlreadyExistsException(request.getEmail());
+        }
 
-        userRepository.save(entity);
+        User newUser = new User();
+        newUser.setRole(UserRole.USER);
+        newUser.setCreatedAt(LocalDateTime.now());
+        newUser.setPassword(passwordEncoder.encode(request.getPassword()));
+        newUser.setEmail(request.getEmail());
+        newUser.setName(request.getName());
 
-        return parseObject(entity, UserResponseDTO.class);
+        userRepository.save(newUser);
+
+        return new RegisterResponseDTO(newUser.getName(), newUser.getEmail());
     }
 
     public LoginResponseDTO login(LoginRequestDTO loginRequestDTO) {

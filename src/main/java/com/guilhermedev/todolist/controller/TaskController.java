@@ -4,11 +4,13 @@ import com.guilhermedev.todolist.dto.task.TaskRequestDTO;
 import com.guilhermedev.todolist.dto.task.TaskResponseDTO;
 import com.guilhermedev.todolist.enums.Priority;
 import com.guilhermedev.todolist.enums.Status;
+import com.guilhermedev.todolist.model.User;
 import com.guilhermedev.todolist.service.TaskService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -26,61 +28,61 @@ public class TaskController {
     @PostMapping
     public ResponseEntity<TaskResponseDTO> createTask(
             @Valid @RequestBody TaskRequestDTO requestDTO,
-            @RequestAttribute("userId") Long userId) {
-        TaskResponseDTO createdTask = taskService.createTask(requestDTO, userId);
+            @AuthenticationPrincipal User user) {
+        TaskResponseDTO createdTask = taskService.createTask(requestDTO, user.getId());
         return ResponseEntity.status(HttpStatus.CREATED).body(createdTask);
     }
 
     @GetMapping
     public ResponseEntity<Page<TaskResponseDTO>> getAllTasks(
-            @RequestAttribute("userId") Long userId,
+            @AuthenticationPrincipal User user,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        Page<TaskResponseDTO> tasks = taskService.getAllTasks(userId, page, size);
+        Page<TaskResponseDTO> tasks = taskService.getAllTasks(user.getId(), page, size);
         return ResponseEntity.ok(tasks);
     }
 
     @GetMapping("/status/{status}")
     public ResponseEntity<List<TaskResponseDTO>> getTasksByStatus(
-            @RequestAttribute("userId") Long userId,
+            @AuthenticationPrincipal User user,
             @PathVariable Status status) {
-        return ResponseEntity.ok(taskService.getTasksByStatus(userId, status));
+        return ResponseEntity.ok(taskService.getTasksByStatus(user.getId(), status));
     }
 
     @GetMapping("/priority/{priority}")
     public ResponseEntity<List<TaskResponseDTO>> getTasksByPriority(
-            @RequestAttribute("userId") Long userId,
+            @AuthenticationPrincipal User user,
             @PathVariable Priority priority) {
-        return ResponseEntity.ok(taskService.getTasksByPriority(userId, priority));
+        return ResponseEntity.ok(taskService.getTasksByPriority(user.getId(), priority));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<TaskResponseDTO> getTaskById(
             @PathVariable Long id,
-            @RequestAttribute("userId") Long userId) {
-        return ResponseEntity.ok(taskService.getTaskById(id, userId));
+            @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(taskService.getTaskById(id, user.getId()));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<TaskResponseDTO> updateTask(
             @PathVariable Long id,
             @Valid @RequestBody TaskRequestDTO requestDTO,
-            @RequestAttribute("userId") Long userId) {
-        return ResponseEntity.ok(taskService.updateTask(id, requestDTO, userId));
+            @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(taskService.updateTask(id, requestDTO, user.getId()));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteTask(
             @PathVariable Long id,
-            @RequestAttribute("userId") Long userId) {
-        taskService.deleteTask(id, userId);
+            @AuthenticationPrincipal User user) {
+        taskService.deleteTask(id, user.getId());
         return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/{id}/complete")
     public ResponseEntity<TaskResponseDTO> markAsCompleted(
             @PathVariable Long id,
-            @RequestAttribute("userId") Long userId) {
-        return ResponseEntity.ok(taskService.markAsCompleted(id, userId));
+            @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(taskService.markAsCompleted(id, user.getId()));
     }
 }
