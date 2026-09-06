@@ -1,6 +1,7 @@
 package com.guilhermedev.todolist.dto.login;
 
-import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Email;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -12,9 +13,10 @@ import lombok.Setter;
 @AllArgsConstructor
 public class LoginRequestDTO {
 
-    @NotEmpty(message = "email is required")
+    @NotBlank(message = "email is required")
+    @Email(message = "email must be valid")
     private String email;
 
-    @NotEmpty(message = "password is required")
+    @NotBlank(message = "password is required")
     private String password;
 }

@@ -16,7 +16,7 @@ import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class CategoryIntegrationTest {
+public class CategoryIntegrationTest extends IntegrationTestBase {
 
     @LocalServerPort
     private int port;

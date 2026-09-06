@@ -14,7 +14,7 @@ import org.springframework.web.client.RestTemplate;
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class AuthIntegrationTest {
+public class AuthIntegrationTest extends IntegrationTestBase {
 
     @LocalServerPort
     private int port;
@@ -22,7 +22,7 @@ public class AuthIntegrationTest {
     private final RestTemplate rest = new RestTemplate();
 
     @Test
-    void registerAndLoginWithH2() {
+    void registerAndLoginWithMySQLContainer() {
         String base = "http://localhost:" + port;
 
         RegisterRequestDTO register = new RegisterRequestDTO();

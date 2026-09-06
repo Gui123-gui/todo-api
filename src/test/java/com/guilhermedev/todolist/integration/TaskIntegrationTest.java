@@ -21,7 +21,7 @@ import java.time.LocalDate;
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class TaskIntegrationTest {
+public class TaskIntegrationTest extends IntegrationTestBase {
 
     @LocalServerPort
     private int port;
